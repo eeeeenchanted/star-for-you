@@ -48,7 +48,7 @@ StartScene.prototype.unloadScene = function () {
 
     gEngine.Textures.unloadTexture(this.kStar);
    //  var nextLevel =new MyGame();
-    var nextLevel =new Level1();
+    var nextLevel =new Level5();
     //var nextLevel =new Level3();
     gEngine.Core.startScene(nextLevel);
 };

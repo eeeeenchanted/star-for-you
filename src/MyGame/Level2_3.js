@@ -41,7 +41,7 @@ function Level2_3() {
     this.flag=0;
     
     this.starcount = 0;
-    this.totalcount = 10;
+    this.totalcount = 14;
     this.springcount = 0;
     this.springflag = 0;
     this.springfirst = 0;

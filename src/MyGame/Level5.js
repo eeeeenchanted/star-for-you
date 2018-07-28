@@ -4,92 +4,94 @@
  * and open the template in the editor.
  */
 
+
 /*jslint node: true, vars: true */
 /*global gEngine, Scene, MyGame,  vec2 ,Math*/
 "use strict"; 
-function BalanceLevel() {
-    // all squares
-    // The camera to view the scene
+
+function Level5(){
+    
     this.mCamera = null;
+     this.mCamera2=null;
     this.mCui = null;
-    this.kHero= "assets/animation.png";
-    this.kMud= "assets/Mud.png";
     this.mHero = null;
+    
+    this.kHero= "assets/animation.png";
+    this.kMud= "assets/Mud.png";   
     this.kBall= "assets/Ball.png";
     this.kWall= "assets/wall.png";
     this.kStar = "assets/yellow.png";
-    this.kHole="assets/Hole.png";
-    this.starcount = 0;
-    this.totalcount = 14;
     this.kBlackHole= "assets/BlackHole.png";
+    this.kDoor="assets/2D_GAME_door.png";
+    this.kRubbish="assets/2D_GAME_rubbish.png";
+    this.kTooth="assets/tooth.png";
+    
+    this.starcount = 0;
+    this.totalcount = 5;
+    
     this.restart = true;
     this.skip=false;
-    this.kTooth="assets/tooth.png";
-    this.kkeyDown="assets/keyDown.png";
-    this.kkeyUp="assets/keyUp.png";
-    this.kkeyS="assets/keyS.png";
-    this.kkeyW="assets/keyW.png";
     
     this.mKeyNBar= null;
     this.time= 0;
     this.LastKeyNTime=0;
     this.KeyNCount=0;
+    
+    this.BHsize = 0;
+    this.BHflag = 0;
+    
+    this.timeLaunch=0;
 }
-gEngine.Core.inheritPrototype(BalanceLevel, Scene);
 
-BalanceLevel.prototype.loadScene = function () {
+gEngine.Core.inheritPrototype(Level5, Scene);
+
+Level5.prototype.loadScene = function () {
     gEngine.Textures.loadTexture(this.kHero);
     gEngine.Textures.loadTexture(this.kMud);
     gEngine.Textures.loadTexture(this.kWall);
     gEngine.Textures.loadTexture(this.kBall);
     gEngine.Textures.loadTexture(this.kStar);
-    gEngine.Textures.loadTexture(this.kHole);
     gEngine.Textures.loadTexture(this.kBlackHole);
     gEngine.Textures.loadTexture(this.kTooth);
-    gEngine.Textures.loadTexture(this.kkeyDown);
-    gEngine.Textures.loadTexture(this.kkeyUp);
-    gEngine.Textures.loadTexture(this.kkeyS);
-    gEngine.Textures.loadTexture(this.kkeyW);
-    if(gEngine.ResourceMap.isAssetLoaded("star")){
-        //this.mCui = gEngine.ResourceMap.retrieveAsset("Cui");
-        this.starcount = gEngine.ResourceMap.retrieveAsset("star");
-    }
+    gEngine.Textures.loadTexture(this.kDoor);
+    gEngine.Textures.loadTexture(this.kRubbish);
+    
+    
 };
 
-BalanceLevel.prototype.unloadScene = function () {
+Level5.prototype.unloadScene = function () {
      gEngine.Textures.unloadTexture(this.kHero);
      gEngine.Textures.unloadTexture(this.kMud);
      gEngine.Textures.unloadTexture(this.kBall);
      gEngine.Textures.unloadTexture(this.kWall);
      gEngine.Textures.unloadTexture(this.kStar);
-     gEngine.Textures.unloadTexture(this.kHole);
      gEngine.Textures.unloadTexture(this.kBlackHole);
      gEngine.Textures.unloadTexture(this.kTooth);
-     gEngine.Textures.unloadTexture(this.kkeyDown);
-     gEngine.Textures.unloadTexture(this.kkeyUp);
-     gEngine.Textures.unloadTexture(this.kkeyS);
-     gEngine.Textures.unloadTexture(this.kkeyW);
-     
-	  if(this.skip)
-	     {
-                gEngine.ResourceMap.loadstar("star",this.starcount);
-	        var nextLevel =new Level2_3();
-	        gEngine.Core.startScene(nextLevel);
-	     }
-	     else{
-	        if(this.restart){
-	            var nextLevel =new BalanceLevel();
-	            gEngine.Core.startScene(nextLevel);
-	        }
-	        else{
-	            gEngine.ResourceMap.loadstar("star",this.starcount);
-	            var nextLevel =new Level2_3();
-	            gEngine.Core.startScene(nextLevel);
-	        } 
-	     }
+     gEngine.Textures.unloadTexture(this.kDoor);
+     gEngine.Textures.unloadTexture(this.kRubbish);
+    
+    if(this.skip){
+        var nextLevel =new EndScene();
+        gEngine.Core.startScene(nextLevel);
+     }
+    else{
+        if(this.restart){
+        var nextLevel =new Level5();
+        gEngine.Core.startScene(nextLevel);
+        }else
+            {   if(this.starcount<this.totalcount){
+               var new_level=new LoseScene(5);
+               gEngine.Core.startScene(new_level);
+             }
+            else {
+                var nextLevel =new EndScene();
+                gEngine.Core.startScene(nextLevel);
+            }
+        }
+    }
 };
 
-BalanceLevel.prototype.initialize= function(){
+Level5.prototype.initialize= function(){
     this.mCamera = new Camera(
         vec2.fromValues(400, 150), // position of the camera
        400,                     // width of camera
@@ -120,37 +122,58 @@ BalanceLevel.prototype.initialize= function(){
     this.mStaritem.setColor([1,1,1,0]);
     this.mStaritem.getXform().setPosition(20,24);
     this.mStaritem.getXform().setSize(30,30);
-    this.mMsg2 = new FontRenderable("Level 2");
+    this.mMsg2 = new FontRenderable("Level 5");
     this.mMsg2.setColor([0, 0, 0, 1]);
     this.mMsg2.getXform().setPosition(20,9);
     this.mMsg2.setTextHeight(11);
-
+    
     this.mAllObjs = new GameObjectSet();  
-    this.mFirstObject = this.mAllObjs.size();
-    this.mCurrentObj = this.mFirstObject;
-     
-
-    this.mHole=new Item(280,560,0,40,40,this.kHole);
-    this.mAllObjs.addToSet(this.mHole);
     
     this.initializeLever();
     
     var Xsum =this.RightPoint.getXform().getXPos()+this.LeftPoint.getXform().getXPos();
     var Ysum =this.RightPoint.getXform().getYPos()+this.LeftPoint.getXform().getYPos();
+    
+    this.mDoor=new Item(520,560,0,50,50,this.kDoor);
+    this.mAllObjs.addToSet(this.mDoor);
+    
     this.heroheight =40;
     this.herowidth =40;
     this.mHero = new Hero(this.kHero, Xsum*1.0/2, Ysum*1.0/2+this.lever.getXform().getHeight()+ this.heroheight/2,this.herowidth,this.heroheight,1024);
     this.mHero.getRigidBody().setMass(0);
     this.mAllObjs.addToSet(this.mHero);
-  
+    
+    this.mChaserSet = new GameObjectSet(); 
+    
     this.initializeStar();
     this.initializeBlackHole();
-    this.initializeTooth();
-    this.initializeGuideobj();
+    this.initializeRubbish();
     this.initializeKeyN();
+    this.initializeTooth();
 };
 
-BalanceLevel.prototype.initializeLever= function(){
+Level5.prototype.initializeTooth= function(){
+    this.mToothset = new GameObjectSet(); 
+    
+    var i,obj;
+    for(i=0;i<20;i++){
+        obj=new Item(555,300+15*i,180,15,15,this.kTooth);
+        this.mToothset.addToSet(obj);
+    }
+    
+};
+
+Level5.prototype.initializeRubbish= function(){
+    this.mRubbishset = new GameObjectSet();
+    
+    this.mR1=new Item(500,150,0,60,60,this.kRubbish);
+    this.mRubbishset.addToSet(this.mR1);
+    this.mR2=new Item(300,450,0,60,60,this.kRubbish);
+    this.mRubbishset.addToSet(this.mR2);
+};
+
+Level5.prototype.initializeLever= function(){
+    
     this.mOtherObjs= new GameObjectSet(); 
      
     this.LeftPoint = new LeverEndPoint(this.kBall,240,0,12, 12);  
@@ -171,162 +194,40 @@ BalanceLevel.prototype.initializeLever= function(){
  
     
 };
-BalanceLevel.prototype.initializeStar= function(){
-    this.mStarset = new GameObjectSet(); 
+
+Level5.prototype.initializeStar= function(){
+    this.mStarset = new GameObjectSet();    
     
-    this.mStar = new Star(this.kHero,  470, 40,35,35);
+    this.mStar = new Star(this.kHero,  440, 60,30,30);
     this.mStarset.addToSet(this.mStar);
-    this.mStar2 = new Star(this.kHero, 270, 78,30,30);
+    this.mStar2 = new Star(this.kHero, 350, 150,20,20);
     this.mStarset.addToSet(this.mStar2);
-    this.mStar3 = new Star(this.kHero, 400, 489,28,28);
+    this.mStar3 = new Star(this.kHero, 460, 300,28,28);
     this.mStarset.addToSet(this.mStar3);
-    this.mStar4 = new Star(this.kHero, 290,220,20,20);
+    this.mStar4 = new Star(this.kHero, 320,350,20,20);
     this.mStarset.addToSet(this.mStar4);
-    this.mStar5 = new Star(this.kHero,320, 358,15,15);
+    this.mStar5 = new Star(this.kHero,500, 470,18,18);
     this.mStarset.addToSet(this.mStar5);
-    this.mStar6 = new Star(this.kHero,440,135,36,36);
-    this.mStarset.addToSet(this.mStar6);
-    this.mStar7 = new Star(this.kHero,520, 290 ,20,20);
-    this.mStarset.addToSet(this.mStar7);
-    this.mStar8 = new Star(this.kHero,321, 310 ,30,30);
-    this.mStarset.addToSet(this.mStar8);
-    this.mStar9 = new Star(this.kHero,490, 560,30,30);
-    this.mStarset.addToSet(this.mStar9);
-    this.mStar10 = new Star(this.kHero,397, 421 ,16,16);
-    this.mStarset.addToSet(this.mStar10);  
-};
-BalanceLevel.prototype.initializeBlackHole= function(){
-    this.mBlackHoleset = new GameObjectSet(); 
+    //this.mStar6 = new Star(this.kHero,400,400,25,25);
+    //this.mStarset.addToSet(this.mStar6);
     
-    this.mBH=new Item(340,70,4,19,19,this.kBlackHole);
-    this.mBlackHoleset.addToSet(this.mBH);
-    this.mBH1=new Item(390,123,12,25,25,this.kBlackHole);
-    this.mBlackHoleset.addToSet(this.mBH1);
-    this.mBH2=new Item(523,170,9,24,24,this.kBlackHole);
-    this.mBlackHoleset.addToSet(this.mBH2);
-    this.mBH3=new Item(400,300,12,19,19,this.kBlackHole);
-    this.mBlackHoleset.addToSet(this.mBH3);
-    this.mBH4=new Item(496,392,4,50,50,this.kBlackHole);
-    this.mBlackHoleset.addToSet(this.mBH4);
-    this.mBH5=new Item(398,520,7,24,24,this.kBlackHole);
-    this.mBlackHoleset.addToSet(this.mBH5);
-    this.mBH6=new Item(430,456,12,36,36,this.kBlackHole);
-    this.mBlackHoleset.addToSet(this.mBH6);
-    this.mBH7=new Item(395,588,18,23,23,this.kBlackHole);
-    this.mBlackHoleset.addToSet(this.mBH7);
-    this.mBH8=new Item(321,278,1,26,26,this.kBlackHole);
-    this.mBlackHoleset.addToSet(this.mBH8);
-    this.mBH9=new Item(521,312,3,35,35,this.kBlackHole);
-    this.mBlackHoleset.addToSet(this.mBH9);
-    this.mBH10=new Item(321,410,10,36,36,this.kBlackHole);
-    this.mBlackHoleset.addToSet(this.mBH10);
-    this.mBH11=new Item(489,221,14,45,45,this.kBlackHole);
-    this.mBlackHoleset.addToSet(this.mBH11);    
-};
-BalanceLevel.prototype.initializeTooth= function(){
-    this.mToothset = new GameObjectSet(); 
-    
-    this.mTooth=new Item(247.5,100,0,15,15,this.kTooth);
-    this.mToothset.addToSet(this.mTooth);
-    this.mTooth1=new Item(247.5,115,0,15,15,this.kTooth);
-    this.mToothset.addToSet(this.mTooth1);
-    this.mTooth2=new Item(247.5,130,0,15,15,this.kTooth);
-    this.mToothset.addToSet(this.mTooth2);
-    this.mTooth3=new Item(247.5,145,0,15,15,this.kTooth);
-    this.mToothset.addToSet(this.mTooth3);
-    this.mTooth4=new Item(247.5,160,0,15,15,this.kTooth);
-    this.mToothset.addToSet(this.mTooth4);
-    this.mTooth5=new Item(247.5,175,0,15,15,this.kTooth);
-    this.mToothset.addToSet(this.mTooth5);    
-    
-    this.mTooth6=new Item(247.5,200,0,15,15,this.kTooth);
-    this.mToothset.addToSet(this.mTooth6);
-    this.mTooth7=new Item(247.5,215,0,15,15,this.kTooth);
-    this.mToothset.addToSet(this.mTooth7);
-    this.mTooth8=new Item(247.5,230,0,15,15,this.kTooth);
-    this.mToothset.addToSet(this.mTooth8);
-    this.mTooth18=new Item(247.5,245,0,15,15,this.kTooth);
-    this.mToothset.addToSet(this.mTooth18);    
-    this.mTooth19=new Item(247.5,260,0,15,15,this.kTooth);
-    this.mToothset.addToSet(this.mTooth19);   
-     
-    this.mTooth9=new Item(247.5,400,0,15,15,this.kTooth);
-    this.mToothset.addToSet(this.mTooth9);
-    this.mTooth10=new Item(247.5,415,0,15,15,this.kTooth);
-    this.mToothset.addToSet(this.mTooth10);
-    this.mTooth11=new Item(247.5,430,0,15,15,this.kTooth);
-    this.mToothset.addToSet(this.mTooth11);    
-    this.mTooth20=new Item(247.5,445,0,15,15,this.kTooth);
-    this.mToothset.addToSet(this.mTooth20);
-    this.mTooth21=new Item(247.5,460,0,15,15,this.kTooth);
-    this.mToothset.addToSet(this.mTooth21);
-    this.mTooth22=new Item(247.5,475,0,15,15,this.kTooth);
-    this.mToothset.addToSet(this.mTooth22);
-    this.mTooth30=new Item(247.5,385,0,15,15,this.kTooth);
-    this.mToothset.addToSet(this.mTooth30);
-    this.mTooth31=new Item(247.5,370,0,15,15,this.kTooth);
-    this.mToothset.addToSet(this.mTooth31);
-    this.mTooth32=new Item(247.5,355,0,15,15,this.kTooth);
-    this.mToothset.addToSet(this.mTooth32);  
-    
-    
-    this.mTooth12=new Item(552.5,430,180,15,15,this.kTooth);
-    this.mToothset.addToSet(this.mTooth12);
-    this.mTooth13=new Item(552.5,445,180,15,15,this.kTooth);
-    this.mToothset.addToSet(this.mTooth13);
-    this.mTooth14=new Item(552.5,460,180,15,15,this.kTooth);
-    this.mToothset.addToSet(this.mTooth14);
-    this.mTooth15=new Item(552.5,475,180,15,15,this.kTooth);
-    this.mToothset.addToSet(this.mTooth15);
-    this.mTooth16=new Item(552.5,490,180,15,15,this.kTooth);
-    this.mToothset.addToSet(this.mTooth16);
-    this.mTooth17=new Item(552.5,505,180,15,15,this.kTooth);
-    this.mToothset.addToSet(this.mTooth17);    
-    
-    
-    
-    this.mTooth23=new Item(552.5,60,180,15,15,this.kTooth);
-    this.mToothset.addToSet(this.mTooth23);
-    this.mTooth24=new Item(552.5,75,180,15,15,this.kTooth);
-    this.mToothset.addToSet(this.mTooth24);
-    this.mTooth25=new Item(552.5,90,180,15,15,this.kTooth);
-    this.mToothset.addToSet(this.mTooth25);    
-    this.mTooth26=new Item(552.5,105,180,15,15,this.kTooth);
-    this.mToothset.addToSet(this.mTooth26);
-    this.mTooth27=new Item(552.5,120,180,15,15,this.kTooth);
-    this.mToothset.addToSet(this.mTooth27);
-    this.mTooth28=new Item(552.5,30,180,15,15,this.kTooth);
-    this.mToothset.addToSet(this.mTooth28);    
-    this.mTooth29=new Item(552.5,45,180,15,15,this.kTooth);
-    this.mToothset.addToSet(this.mTooth29);    
-};
-BalanceLevel.prototype.initializeGuideobj= function(){
-    this.mguideset =new GameObjectSet(); 
-   
-    this.mguidekeyS = new TextureRenderable(this.kkeyS);
-    this.mguidekeyS.getXform().setPosition(225,10);
-    this.mguidekeyS.getXform().setSize(16,8);
-    this.mguideset.addToSet(this.mguidekeyS);
-     
-    this.mguidekeyW = new TextureRenderable(this.kkeyW);
-    this.mguidekeyW.getXform().setPosition(225,20);
-    this.mguidekeyW.getXform().setSize(16,8);
-    this.mguideset.addToSet(this.mguidekeyW);
-    
-        
-    this.mguidekeyUp = new TextureRenderable(this.kkeyUp);
-    this.mguidekeyUp.getXform().setPosition(575,20);
-    this.mguidekeyUp.getXform().setSize(16,8);
-    this.mguideset.addToSet(this.mguidekeyUp);
-     
-    this.mguidekeyDown= new TextureRenderable(this.kkeyDown);
-    this.mguidekeyDown.getXform().setPosition(575,10);
-    this.mguidekeyDown.getXform().setSize(16,8);
-    this.mguideset.addToSet(this.mguidekeyDown);
 };
 
-BalanceLevel.prototype.initializeKeyN= function(){
-    this.mKeyNTip = new FontRenderable("Hold [N] to skip to Level2.3");
+Level5.prototype.initializeBlackHole= function(){
+    this.mBlackHoleset = new GameObjectSet(); 
+  
+    this.mBH=new Item(320,110,4,10,10,this.kBlackHole);
+    this.mBlackHoleset.addToSet(this.mBH);
+    this.mBH1=new Item(410,280,12,10,10,this.kBlackHole);
+    this.mBlackHoleset.addToSet(this.mBH1);
+    this.mBH2=new Item(470,480,9,15,15,this.kBlackHole);
+    this.mBlackHoleset.addToSet(this.mBH2);
+    
+};
+
+
+Level5.prototype.initializeKeyN= function(){
+    this.mKeyNTip = new FontRenderable("Hold [N] to skip to Level6");
     this.mKeyNTip.setColor([0.6,0.6,0.6, 1]);
     this.mKeyNTip.getXform().setPosition(250,20);
     this.mKeyNTip.setTextHeight(7);
@@ -338,49 +239,56 @@ BalanceLevel.prototype.initializeKeyN= function(){
     this.mKeyNBar.getXform().setSize(100,1.5);
     this.mAllObjs.addToSet(this.mKeyNBar);
 };
-BalanceLevel.prototype.draw = function () {
+
+Level5.prototype.draw = function () {
     // Step A: clear the canvas
     gEngine.Core.clearCanvas([0.7, 0.7, 0.7, 1.0]); // clear to deep gray
 
     // Step  B: Activate the drawing Camera
-   this.mCamera.setupViewProjection();
-    // Step  C: Draw all the squares
-   this.mStarset.draw(this.mCamera);
-    this.mBlackHoleset.draw(this.mCamera);
+    this.mCamera.setupViewProjection();
+    // Step  C: Draw all the squares   
+    this.mStarset.draw(this.mCamera);
+    this.mBlackHoleset.draw(this.mCamera); 
+    this.mChaserSet.draw(this.mCamera);
+    this.mRubbishset.draw(this.mCamera); 
     this.mToothset.draw(this.mCamera);
-    this.mguideset.draw(this.mCamera);
-    this.mAllObjs.draw(this.mCamera);
     this.mOtherObjs.draw(this.mCamera);
+    this.mAllObjs.draw(this.mCamera); 
     
     this.mCamera2.setupViewProjection();
     this.mStarset.draw(this.mCamera2);
     this.mBlackHoleset.draw(this.mCamera2);
+    this.mChaserSet.draw(this.mCamera2);
+    this.mRubbishset.draw(this.mCamera2); 
     this.mToothset.draw(this.mCamera2);
     this.mAllObjs.draw(this.mCamera2);
     this.mOtherObjs.draw(this.mCamera2);
     
       // this.mCollisionInfos = []; 
     this.mCui.setupViewProjection();
-     this.mMsg2.draw(this.mCui);
+    this.mMsg2.draw(this.mCui);
     this.mMsg.draw(this.mCui); //mcamera->canvus? 
     this.mStaritem.draw(this.mCui);
 };
 
-
-BalanceLevel.prototype.update = function () {
+Level5.prototype.update = function () {
     var deltaY = 1;
     var xformLeft = this.LeftPoint.getXform();
     var xformRight = this.RightPoint.getXform();
 
 //camera movement
     this.mCamera.update();
+    this.mCamera2.update();
+    this.mCui.update();
+    
     if(this.mHero.getXform().getYPos()>=150){
         this.mCamera.setWCCenter(400,this.mHero.getXform().getYPos());
     }
     if(this.mHero.getXform().getYPos()>=450){
         this.mCamera.setWCCenter(400,450);
     }
-    this.mHole.getXform().incRotationByDegree(1);
+     
+    
     // Support hero movements
     if (gEngine.Input.isKeyPressed(gEngine.Input.keys.W)) {
         if(xformLeft.getYPos()<570)
@@ -445,26 +353,30 @@ BalanceLevel.prototype.update = function () {
         this.mKeyNBar.getXform().setSize(newwidth,1.5);
         if(newwidth<=0)
         {
-              this.skip=true;
+            this.skip=true;
             gEngine.GameLoop.stop();
         }
         this.LastKeyNTime=this.time;
         flag =1;  // accept space 
     }
+    
     if(flag===0)
     {
         this.mKeyNBar.getXform().setSize(100,1.5);
         this.KeyNCount=0;
     }
-    this.mAllObjs.update(this.mCamera);
-    this.mOtherObjs.update(this.mCamera);
-    this.mStarset.update(this.mCamera);
-    this.mStarset.update(this.mCamera2);
-    this.mBlackHoleset.update(this.mCamera);
-    this.mBlackHoleset.update(this.mCamera2);
-    this.mToothset.update(this.mCamera);
-    this.mToothset.update(this.mCamera2);
-      
+    
+    this.mAllObjs.update();
+    this.mOtherObjs.update();
+    this.mStarset.update();
+    this.mBlackHoleset.update();
+    this.mRubbishset.update();
+    this.mChaserSet.update();
+    this.mToothset.update();
+    this.updateBH();  
+    this.updateChaser();
+    this.mHero.updateChaser(this.mChaserSet);
+    
     var h = [];
     var i;
     for(i=0;i<this.mStarset.size();i++){
@@ -479,10 +391,11 @@ BalanceLevel.prototype.update = function () {
     this.mMsg.setText(msg);
     
     var h=[];
-    if(this.mHero.boundTest(this.mHole)){
+    if(this.mHero.boundTest(this.mDoor)){
         this.restart=false;
         gEngine.GameLoop.stop();
     }
+    
     var h = [];
     var i;
     for(i=0;i<this.mBlackHoleset.size();i++){
@@ -492,13 +405,74 @@ BalanceLevel.prototype.update = function () {
         }
     }
     
-    var h = [];
     var i;
+    for(i=0;i<this.mRubbishset.size();i++){
+        if(this.mHero.boundTest(this.mRubbishset.getObjectAt(i))){
+            this.restart = true;
+            gEngine.GameLoop.stop();
+        }
+    }
+    
+     var i;
     for(i=0;i<this.mToothset.size();i++){
         if(this.mHero.boundTest(this.mToothset.getObjectAt(i))){
             this.restart = true;
             gEngine.GameLoop.stop();
         }
     }
-    
+
 };
+
+Level5.prototype.updateBH = function () {
+    
+    if(this.BHsize===0){
+        this.BHflag=1;
+    }
+    else if(this.BHsize===40){
+        this.BHflag=0;
+    }
+    if(this.BHflag===1){
+        this.BHsize=this.BHsize+0.5;
+    }
+    else{
+        this.BHsize=this.BHsize-0.5;
+    }
+    //console.log(this.BHsize);
+    var i,obj;
+    for(i=0;i<this.mBlackHoleset.size();i++){
+        obj=this.mBlackHoleset.getObjectAt(i);
+        obj.getXform().setSize(10+this.BHsize,10+this.BHsize);
+        obj.setBoundRadius((10+this.BHsize)/2);
+        obj.getXform().incRotationByDegree(1);
+    }
+};
+
+Level5.prototype.updateChaser = function () {
+    
+    if(this.mHero.getXform().getYPos()<300){
+        this.timeLaunch++;    
+        if(this.timeLaunch === 200){
+            var c = new Chaser(this.kRubbish,this.mR1.getXform().getXPos(),this.mR1.getXform().getYPos(),10,10,1,200);
+            this.mChaserSet.addToSet(c);
+            this.timeLaunch=0;
+        }
+        //console.log(this.timeLaunch);
+    }
+    else if(this.mHero.getXform().getYPos()>300){
+        this.timeLaunch++;    
+        if(this.timeLaunch === 200){
+            var c = new Chaser(this.kRubbish,this.mR2.getXform().getXPos(),this.mR2.getXform().getYPos(),10,10,1,200);
+            this.mChaserSet.addToSet(c);
+            this.timeLaunch=0;
+        }
+    }
+    
+    var i, obj;
+    for (i=0; i<this.mChaserSet.size(); i++) {
+        obj = this.mChaserSet.getObjectAt(i);       
+            if (obj.hasExpired()) {
+                this.mChaserSet.removeFromSet(obj);
+            }                              
+    }
+};
+

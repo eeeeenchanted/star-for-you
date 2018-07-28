@@ -293,7 +293,7 @@ Level3.prototype.update=function(){
     if(this.mHero.getXform().getXPos()<700){
         this.timeLaunch++;    
         if(this.timeLaunch === 100){
-            var c = new Chaser(this.kRubbish,this.mRubbish.getXform().getXPos(),this.mRubbish.getXform().getYPos(),30,30);
+            var c = new Chaser(this.kRubbish,this.mRubbish.getXform().getXPos(),this.mRubbish.getXform().getYPos(),30,30,3,1000);
             this.mChaserSet.addToSet(c);
             this.timeLaunch=0;
         }
@@ -368,7 +368,7 @@ Level3.prototype.updateSpring=function(){
             }
             else{
                 this.mHero.getXform().setPosition(this.x,this.y);
-                this.mHero.getRigidBody().setVelocity(0,570);
+                this.mHero.getRigidBody().setVelocity(0,520);
                 this.springcount=0;
                 this.springflag=0;
                 this.springfirst=1;
@@ -383,7 +383,7 @@ Level3.prototype.updateSpring=function(){
             }
             else{
                 this.mHero.getXform().setPosition(this.x,this.y);
-                this.mHero.getRigidBody().setVelocity(0,570);
+                this.mHero.getRigidBody().setVelocity(0,520);
                 this.springcount=0;
                 this.springflag=0;
                 this.springfirst=1;

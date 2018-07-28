@@ -39,7 +39,7 @@ function MyGame() {
     this.flag=0;
     
     this.starcount = 0;
-    this.totalcount = 10;
+    this.totalcount = 14;
     
     this.restart = true;
     this.skip=false;
@@ -47,10 +47,6 @@ function MyGame() {
     this.time= 0;
     this.LastKeyNTime=0;
     this.KeyNCount=0;
-    
-    this.a=0;
-    this.b=0;
-    this.flag2=0;//0 for not begin
 }
 
 gEngine.Core.inheritPrototype(MyGame, Scene);
@@ -191,7 +187,7 @@ MyGame.prototype.initialize = function () {
     this.platform11.getXform().setRotationInDegree(180-angle1);
     this.platform11.getXform().setSize(len1,16);
     
-    this.platform12=new MapObject(830,300,0,100,16,null);
+    this.platform12=new MapObject(830,300,0,16,100,null);
     this.mPlatformset.addToSet(this.platform12);
 
     this.platform13=new MapObject(-8,300,0,16,600,null);//left wall
@@ -203,11 +199,8 @@ MyGame.prototype.initialize = function () {
     //this.mHole.setBoundRadius(40);
     //this.mItemset.addToSet(this.mHole);
     
-    this.mRubbish=new Item(450,650,0,60,60,this.kRubbish);
+    this.mRubbish=new Item(500,650,0,60,60,this.kRubbish);
     this.mRubbishset.addToSet(this.mRubbish);
-    
-    this.mRubbish3 = new Item(520,-30,0,60,60,this.kRubbish);
-    this.mRubbishset.addToSet(this.mRubbish3);
     //this.createBounds();
     this.mRubbish2=new Item(250,430,0,50,50,this.kRubbish);
     this.mRubbishset.addToSet(this.mRubbish2);
@@ -327,16 +320,13 @@ MyGame.prototype.update = function () {
     this.mRubbishset.update(this.mCamera2);
     this.mStarset.update(this.mCamera2);
     
-    this.a=this.a+0.01;
-
-    if(this.mHero.getXform().getPosition()[0]>=420){
-        this.flag2=1;
+    if(this.mHero.getXform().getPosition()[0]>=350){
+        this.mRubbish.getXform().incYPosBy(-2.5);
     }
-    if(this.flag2===1){
-        this.mRubbish.getXform().incYPosBy(-this.a);
-        this.mRubbish3.getXform().incYPosBy(this.a);
-    }
-
+    /*if(this.mHero.getXform().getPosition()[0]>=550){
+        this.mRubbish.getXform().setPosition(500,650);
+    }*/
+    
 //change the rubbish2 's size
     if(this.size===0){
         this.flag=1;

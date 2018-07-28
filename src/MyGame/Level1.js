@@ -43,7 +43,7 @@ function Level1() {
     this.flag=0;
     
     this.starcount = 0;
-    this.totalcount = 8;
+    this.totalcount = 10;
     
         
     this.mKeyNBar= null;

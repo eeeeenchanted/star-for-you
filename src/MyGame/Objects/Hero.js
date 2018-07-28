@@ -37,7 +37,6 @@ function Hero(spriteTexture, atX, atY, w, h,top) {
     //used for StartScene automove 
      this.count=0;
      this.autodelta =kWASDDelta;
-     
 }
 
 gEngine.Core.inheritPrototype(Hero, GameObject);
@@ -47,7 +46,6 @@ Hero.prototype.keyControl = function (PlatformSet1,SpringSet2) {
     this.ObjectSet1=PlatformSet1;
     this.ObjectSet2=SpringSet2;
     var flag=0;//0 for no collision
-    var spaceflag=0;
     var i;
     if(this.ObjectSet1!==null){
         for(i=1;i<this.ObjectSet1.size();i++){
@@ -55,7 +53,7 @@ Hero.prototype.keyControl = function (PlatformSet1,SpringSet2) {
         if((this.getXform().getYPos()-this.mHeight/2)<=(ObjectPos.getYPos()+ObjectPos.getHeight()/2)
             &&(this.getXform().getXPos()+this.mWidth/2)>(ObjectPos.getXPos()-ObjectPos.getWidth()/2)
             &&(this.getXform().getXPos()-this.mWidth/2)<(ObjectPos.getXPos()+ObjectPos.getWidth()/2)
-            &&(this.getXform().getYPos()+this.mHeight/2)>=(ObjectPos.getYPos()-ObjectPos.getHeight()/2)){
+            &&(this.getXform().getYPos()+this.mHeight/2)>(ObjectPos.getYPos()-ObjectPos.getHeight()/2)){
             flag=1;
         }
     }
@@ -71,27 +69,20 @@ Hero.prototype.keyControl = function (PlatformSet1,SpringSet2) {
             }
         }
     }
-    
-    if (gEngine.Input.isKeyClicked(gEngine.Input.keys.Space)){
-        spaceflag=1;
-    }
-    
-    if(flag===1&&spaceflag===1){
+   
+    if(flag===1){
         cnt=0;
     }
     
-    if(flag===1&&spaceflag===0){
-        cnt=1;
-    }
-    
     if (gEngine.Input.isKeyClicked(gEngine.Input.keys.Space)) {
-        if(cnt === 0){           
-                this.getRigidBody().setVelocity(0,300);
-            }    
+        if(cnt === 0){
+                this.getRigidBody().setVelocity(this.getRigidBody().getVelocity()[0],300);
+        }     
          if(cnt === 1){
-                this.getRigidBody().setVelocity(0,300);
+                this.getRigidBody().setVelocity(this.getRigidBody().getVelocity()[0],300);
         }   
         cnt++;
+        console.log(this.getRigidBody().getVelocity()[1]);
     }
     
     if (gEngine.Input.isKeyPressed(gEngine.Input.keys.Left)) {
