@@ -12,6 +12,7 @@ function BalanceLevel() {
     // The camera to view the scene
     this.mCamera = null;
     this.mCui = null;
+    this.mCdead=null;
     this.kHero= "assets/animation.png";
     this.kMud= "assets/Mud.png";
     this.mHero = null;
@@ -29,11 +30,19 @@ function BalanceLevel() {
     this.kkeyUp="assets/keyUp.png";
     this.kkeyS="assets/keyS.png";
     this.kkeyW="assets/keyW.png";
-    
+    this.kbg="assets/background.png";    
+    this.kCue="assets/Star.wav";
+    this.kBGM = "assets/Lopu.mp3";
+    this.kback="assets/back.png";
+    this.krestart="assets/restart.png";
+    this.back=0;
+
+
     this.mKeyNBar= null;
     this.time= 0;
     this.LastKeyNTime=0;
     this.KeyNCount=0;
+    this.died=0;
 }
 gEngine.Core.inheritPrototype(BalanceLevel, Scene);
 
@@ -50,6 +59,15 @@ BalanceLevel.prototype.loadScene = function () {
     gEngine.Textures.loadTexture(this.kkeyUp);
     gEngine.Textures.loadTexture(this.kkeyS);
     gEngine.Textures.loadTexture(this.kkeyW);
+    gEngine.Textures.loadTexture(this.kbg);
+    gEngine.AudioClips.loadAudio(this.kCue);
+    gEngine.Textures.loadTexture(this.kback);
+    gEngine.Textures.loadTexture(this.krestart);
+
+
+    
+    //gEngine.AudioClips.playBackgroundAudio(this.kBGM);
+    
     if(gEngine.ResourceMap.isAssetLoaded("star")){
         //this.mCui = gEngine.ResourceMap.retrieveAsset("Cui");
         this.starcount = gEngine.ResourceMap.retrieveAsset("star");
@@ -69,7 +87,14 @@ BalanceLevel.prototype.unloadScene = function () {
      gEngine.Textures.unloadTexture(this.kkeyUp);
      gEngine.Textures.unloadTexture(this.kkeyS);
      gEngine.Textures.unloadTexture(this.kkeyW);
-     
+     gEngine.Textures.unloadTexture(this.kbg);
+     gEngine.AudioClips.unloadAudio(this.kCue);
+   //  gEngine.AudioClips.stopBackgroundAudio();
+     gEngine.Textures.unloadTexture(this.krestart);
+     gEngine.Textures.unloadTexture(this.kback);
+
+
+
 	  if(this.skip)
 	     {
                 gEngine.ResourceMap.loadstar("star",this.starcount);
@@ -81,6 +106,12 @@ BalanceLevel.prototype.unloadScene = function () {
 	            var nextLevel =new BalanceLevel();
 	            gEngine.Core.startScene(nextLevel);
 	        }
+                else if(this.back){
+               gEngine.ResourceMap.loadstar("level2",this.starcount);
+               var nextLevel =new PassScene(2,this.starcount);
+               
+               gEngine.Core.startScene(nextLevel);
+                }
 	        else{
 	            gEngine.ResourceMap.loadstar("star",this.starcount);
 	            var nextLevel =new Level2_3();
@@ -99,31 +130,46 @@ BalanceLevel.prototype.initialize= function(){
      
      this.mCamera2= new Camera(
         vec2.fromValues(400, 300), // position of the camera
-       800,                     // width of camera
-        [680, 510, 120, 90]         // viewport (orgX, orgY, width, height)
+        320,                     // width of camera
+        [722, 480, 64, 120]         // viewport (orgX, orgY, width, height)
     );
       this.mCamera2.setBackgroundColor([0.9, 0.9, 0.9, 1]);
      gEngine.DefaultResources.setGlobalAmbientIntensity(3);
       
      this.mCui = new Camera(
-            vec2.fromValues(40,20),
-            90,
-            [0,540,120,60]);
-    this.mCui.setBackgroundColor([0.8,0.8,0.8,1]);
-   
-    this.mMsg = new FontRenderable("0/10");
-    this.mMsg.setColor([0, 0, 0, 1]);
-    this.mMsg.getXform().setPosition(43,27);
-    this.mMsg.setTextHeight(15);
+            vec2.fromValues(this.mCamera.mCameraState.getCenter()[0]-370, this.mCamera.mCameraState.getCenter()[1]+270),
+            60,
+            [0,510,90,90]);
+
+     this.mCdead = new Camera(
+            this.mCamera.mCameraState.getCenter(),
+            200,
+            [200,150,400,300]);
+    this.mCdead.setBackgroundColor([0.705, 0.443, 0.341, 0.5 ]);
     
-    this.mStaritem = new TextureRenderable(this.kStar);
-    this.mStaritem.setColor([1,1,1,0]);
-    this.mStaritem.getXform().setPosition(20,24);
-    this.mStaritem.getXform().setSize(30,30);
-    this.mMsg2 = new FontRenderable("Level 2");
-    this.mMsg2.setColor([0, 0, 0, 1]);
-    this.mMsg2.getXform().setPosition(20,9);
-    this.mMsg2.setTextHeight(11);
+
+    this.mbg = new TextureRenderable(this.kbg);
+    this.mbg.getXform().setPosition(400,300);
+    this.mbg.getXform().setSize(800,600);
+        this.mMsg2 = new FontRenderable("Level 2");
+    this.mMsg2.setColor([222/255, 212/255, 173/255, 1]);
+    this.mMsg2.getXform().setPosition(10,50);
+    this.mMsg2.setTextHeight(12);
+    
+    this.mMsg3 = new FontRenderable("Target:8");
+    this.mMsg3.setColor([0.2, 0.2, 0.2, 1]);
+    this.mMsg3.getXform().setPosition(7,22);
+    this.mMsg3.setTextHeight(10);
+    this.mMsg4 = new FontRenderable("Total :14");
+    this.mMsg4.setColor([0.2, 0.2, 0.2, 1]);
+    this.mMsg4.getXform().setPosition(7,10);
+    this.mMsg4.setTextHeight(10);
+    
+    this.mMsg = new FontRenderable("Now   :0");
+    this.mMsg.setColor([0.2, 0.2, 0.2, 1]);
+    this.mMsg.getXform().setPosition(8,33);
+    this.mMsg.setTextHeight(10);
+
 
     this.mAllObjs = new GameObjectSet();  
     this.mFirstObject = this.mAllObjs.size();
@@ -148,7 +194,39 @@ BalanceLevel.prototype.initialize= function(){
     this.initializeTooth();
     this.initializeGuideobj();
     this.initializeKeyN();
+    this.initializeCameraDead();
 };
+
+
+BalanceLevel.prototype.initializeCameraDead = function(){
+     this.mDeadset=new GameObjectSet();
+    
+    
+//    this.mbg = new TextureRenderable(this.kbg);
+//    this.mbg.getXform().setPosition(1000,300);
+//    this.mbg.getXform().setSize(2000,600);
+    //this.mDeadset.addToSet(this.mbg);
+    
+    this.mMsgDead = new FontRenderable("Ooops, you died :(");
+    this.mMsgDead.setColor([1,1,1, 1]);
+    this.mMsgDead.getXform().setPosition(this.mCdead.getWCCenter()[0]-70,this.mCdead.getWCCenter[1]+40);
+    this.mMsgDead.setTextHeight(15);   
+    this.mDeadset.addToSet(this.mMsgDead);
+    
+    this.restartbutton = new TextureRenderable(this.krestart);
+    this.restartbutton.setColor([1,1,1,0]);
+    this.restartbutton.getXform().setPosition(this.mCdead.getWCCenter()[0],this.mCdead.getWCCenter[1]-10);
+    this.restartbutton.getXform().setSize(64,32);
+    this.mDeadset.addToSet(this.restartbutton);
+    
+    this.backtbutton = new TextureRenderable(this.kback);
+    this.backtbutton.setColor([1,1,1,0]);
+    this.backtbutton.getXform().setPosition(this.mCdead.getWCCenter()[0],this.mCdead.getWCCenter[1]-50);
+    this.backtbutton.getXform().setSize(64,32);
+    this.mDeadset.addToSet(this.backtbutton);
+    
+};
+
 
 BalanceLevel.prototype.initializeLever= function(){
     this.mOtherObjs= new GameObjectSet(); 
@@ -224,7 +302,7 @@ BalanceLevel.prototype.initializeBlackHole= function(){
     this.mBlackHoleset.addToSet(this.mBH11);    
 };
 BalanceLevel.prototype.initializeTooth= function(){
-    this.mToothset = new GameObjectSet(); 
+  this.mToothset = new GameObjectSet(); 
     
     this.mTooth=new Item(247.5,100,0,15,15,this.kTooth);
     this.mToothset.addToSet(this.mTooth);
@@ -234,9 +312,9 @@ BalanceLevel.prototype.initializeTooth= function(){
     this.mToothset.addToSet(this.mTooth2);
     this.mTooth3=new Item(247.5,145,0,15,15,this.kTooth);
     this.mToothset.addToSet(this.mTooth3);
-    this.mTooth4=new Item(247.5,160,0,15,15,this.kTooth);
+    this.mTooth4=new Item(247.5,70,0,15,15,this.kTooth);
     this.mToothset.addToSet(this.mTooth4);
-    this.mTooth5=new Item(247.5,175,0,15,15,this.kTooth);
+    this.mTooth5=new Item(247.5,85,0,15,15,this.kTooth);
     this.mToothset.addToSet(this.mTooth5);    
     
     this.mTooth6=new Item(247.5,200,0,15,15,this.kTooth);
@@ -270,17 +348,17 @@ BalanceLevel.prototype.initializeTooth= function(){
     this.mToothset.addToSet(this.mTooth32);  
     
     
-    this.mTooth12=new Item(552.5,430,180,15,15,this.kTooth);
+    this.mTooth12=new Item(552.5,370,180,15,15,this.kTooth);
     this.mToothset.addToSet(this.mTooth12);
-    this.mTooth13=new Item(552.5,445,180,15,15,this.kTooth);
+    this.mTooth13=new Item(552.5,385,180,15,15,this.kTooth);
     this.mToothset.addToSet(this.mTooth13);
-    this.mTooth14=new Item(552.5,460,180,15,15,this.kTooth);
+    this.mTooth14=new Item(552.5,400,180,15,15,this.kTooth);
     this.mToothset.addToSet(this.mTooth14);
-    this.mTooth15=new Item(552.5,475,180,15,15,this.kTooth);
+    this.mTooth15=new Item(552.5,415,180,15,15,this.kTooth);
     this.mToothset.addToSet(this.mTooth15);
-    this.mTooth16=new Item(552.5,490,180,15,15,this.kTooth);
+    this.mTooth16=new Item(552.5,430,180,15,15,this.kTooth);
     this.mToothset.addToSet(this.mTooth16);
-    this.mTooth17=new Item(552.5,505,180,15,15,this.kTooth);
+    this.mTooth17=new Item(552.5,445,180,15,15,this.kTooth);
     this.mToothset.addToSet(this.mTooth17);    
     
     
@@ -327,13 +405,13 @@ BalanceLevel.prototype.initializeGuideobj= function(){
 
 BalanceLevel.prototype.initializeKeyN= function(){
     this.mKeyNTip = new FontRenderable("Hold [N] to skip to Level2.3");
-    this.mKeyNTip.setColor([0.6,0.6,0.6, 1]);
+    this.mKeyNTip.setColor([0.447,0.286,0.219, 1]);
     this.mKeyNTip.getXform().setPosition(250,20);
     this.mKeyNTip.setTextHeight(7);
     this.mAllObjs.addToSet(this.mKeyNTip);
     
     this.mKeyNBar =new Renderable();
-    this.mKeyNBar.setColor([0.6,0.6,0.6,1]);
+    this.mKeyNBar.setColor([0.447,0.286,0.219,1]);
     this.mKeyNBar.getXform().setPosition(310,10);
     this.mKeyNBar.getXform().setSize(100,1.5);
     this.mAllObjs.addToSet(this.mKeyNBar);
@@ -344,7 +422,7 @@ BalanceLevel.prototype.draw = function () {
 
     // Step  B: Activate the drawing Camera
    this.mCamera.setupViewProjection();
-    // Step  C: Draw all the squares
+   this.mbg.draw(this.mCamera);
    this.mStarset.draw(this.mCamera);
     this.mBlackHoleset.draw(this.mCamera);
     this.mToothset.draw(this.mCamera);
@@ -353,6 +431,7 @@ BalanceLevel.prototype.draw = function () {
     this.mOtherObjs.draw(this.mCamera);
     
     this.mCamera2.setupViewProjection();
+    this.mbg.draw(this.mCamera2);
     this.mStarset.draw(this.mCamera2);
     this.mBlackHoleset.draw(this.mCamera2);
     this.mToothset.draw(this.mCamera2);
@@ -361,9 +440,45 @@ BalanceLevel.prototype.draw = function () {
     
       // this.mCollisionInfos = []; 
     this.mCui.setupViewProjection();
-     this.mMsg2.draw(this.mCui);
-    this.mMsg.draw(this.mCui); //mcamera->canvus? 
-    this.mStaritem.draw(this.mCui);
+    this.mbg.draw(this.mCui);
+    this.mMsg.draw(this.mCui); 
+    this.mMsg2.draw(this.mCui);
+    this.mMsg3.draw(this.mCui);
+    this.mMsg4.draw(this.mCui);
+    
+    
+    if(this.died===1)
+    {
+        this.mCdead.setupViewProjection();
+        this.mbg.draw(this.mCdead);
+        this.mStarset.draw(this.mCdead);
+        this.mBlackHoleset.draw(this.mCdead);
+        this.mToothset.draw(this.mCdead);
+        this.mAllObjs.draw(this.mCdead);
+        this.mOtherObjs.draw(this.mCdead);
+        this.mguideset.draw(this.mCdead);
+        this.mDeadset.draw(this.mCdead);
+    }
+};
+
+BalanceLevel.prototype.updatemCui= function(){
+    var newcenterx =this.mCamera.getWCCenter()[0]-370 ;
+    var newcentery=this.mCamera.getWCCenter()[1]+120;
+    
+    //console.log(this.mCamera.mCameraState.getCenter()[0]-370);
+   // console.log(this.mCamera.mCameraState.getCenter()[1]+120);
+     
+    this.mCui.setWCCenter(newcenterx,newcentery);  
+    //console.log(this.mCui.mCameraState.getCenter());
+    this.mMsg2.getXform().setPosition(this.mCui.getWCCenter()[0]-20,this.mCui.getWCCenter()[1]+20);
+
+    this.mMsg3.getXform().setPosition(this.mCui.getWCCenter()[0]-23,this.mCui.getWCCenter()[1]-8);
+
+    this.mMsg4.getXform().setPosition(this.mCui.getWCCenter()[0]-23,this.mCui.getWCCenter()[1]-20);
+  
+    this.mMsg.getXform().setPosition(this.mCui.getWCCenter()[0]-22,this.mCui.getWCCenter()[1]+3);
+    
+    //this.mCui.mCameraState.updateCameraState();
 };
 
 
@@ -380,7 +495,14 @@ BalanceLevel.prototype.update = function () {
     if(this.mHero.getXform().getYPos()>=450){
         this.mCamera.setWCCenter(400,450);
     }
-    this.mHole.getXform().incRotationByDegree(1);
+    
+   this.mCamera.update();
+    this.updatemCui();
+    this.mCui.update();
+     this.mHole.getXform().incRotationByDegree(1);
+    this.updateCameradead();
+    
+    if(this.died===0){
     // Support hero movements
     if (gEngine.Input.isKeyPressed(gEngine.Input.keys.W)) {
         if(xformLeft.getYPos()<570)
@@ -406,7 +528,7 @@ BalanceLevel.prototype.update = function () {
         {   xformRight.incYPosBy(-deltaY);
         }
     }
-    
+    }
     var Ydiff =this.RightPoint.getXform().getYPos()-this.LeftPoint.getXform().getYPos();
     var Xdiff =this.RightPoint.getXform().getXPos()-this.LeftPoint.getXform().getXPos();
     var Ysum =this.RightPoint.getXform().getYPos()+this.LeftPoint.getXform().getYPos();
@@ -464,6 +586,7 @@ BalanceLevel.prototype.update = function () {
     this.mBlackHoleset.update(this.mCamera2);
     this.mToothset.update(this.mCamera);
     this.mToothset.update(this.mCamera2);
+    this.mDeadset.update();
       
     var h = [];
     var i;
@@ -472,10 +595,11 @@ BalanceLevel.prototype.update = function () {
             this.starcount++;
             this.mStarset.getObjectAt(i).setVisibility(false);
             this.mStarset.removeFromSet(this.mStarset.getObjectAt(i));
+            gEngine.AudioClips.playACue(this.kCue);
         }
     }
     
-    var msg = this.starcount + "/" + this.totalcount;
+    var msg ="Now   :"+this.starcount;
     this.mMsg.setText(msg);
     
     var h=[];
@@ -487,17 +611,69 @@ BalanceLevel.prototype.update = function () {
     var i;
     for(i=0;i<this.mBlackHoleset.size();i++){
         if(this.mHero.boundTest(this.mBlackHoleset.getObjectAt(i))){
-            this.restart = true;
-            gEngine.GameLoop.stop();
+            //this.restart = true;
+            //gEngine.GameLoop.stop();
+            this.died=1;
         }
     }
     
     var h = [];
     var i;
     for(i=0;i<this.mToothset.size();i++){
-        if(this.mHero.boundTest(this.mToothset.getObjectAt(i))){
-            this.restart = true;
-            gEngine.GameLoop.stop();
+        if(this.mHero.boundTest(this.mToothset.getObjectAt(i),h)){
+           //this.restart = true;
+            //gEngine.GameLoop.stop();
+            this.died=1;
+        }
+    }
+    
+    
+    
+};
+
+BalanceLevel.prototype.updateCameradead = function () {
+    this.mDeadset.update();
+    this.mCdead.setWCCenter(this.mCamera.getWCCenter()[0],this.mCamera.getWCCenter()[1]);
+    this.mMsgDead.getXform().setPosition(this.mCdead.getWCCenter()[0]-70,this.mCdead.getWCCenter()[1]+40);
+    //console.log(this.mMsgDead.getXform().getPosition());
+    this.restartbutton.getXform().setPosition(this.mCdead.getWCCenter()[0],this.mCdead.getWCCenter()[1]-10);
+    this.backtbutton.getXform().setPosition(this.mCdead.getWCCenter()[0],this.mCdead.getWCCenter()[1]-50);
+   
+    var mx,my,rxf,bxf;
+   
+    mx=gEngine.Input.getMousePosX();
+    my=gEngine.Input.getMousePosY();
+    rxf=this.restartbutton.getXform();
+    bxf=this.backtbutton.getXform();
+   
+    if(this.died===1)
+    {
+        if(mx<464&&mx>336
+                &&my<312&&my>248)
+        {
+            this.restartbutton.getXform().setPosition(this.mCdead.getWCCenter()[0],this.mCdead.getWCCenter()[1]-13);
+            if(gEngine.Input.isButtonClicked(gEngine.Input.mouseButton.Left))
+            {   
+                this.restart=true;            
+                gEngine.GameLoop.stop();
+            }
+        }
+        else{
+            this.restartbutton.getXform().setPosition(this.mCdead.getWCCenter()[0],this.mCdead.getWCCenter()[1]-10);
+        }
+        if(mx<464&&mx>336
+                &&my<232&&my>168)
+        {
+            this.backtbutton.getXform().setPosition(this.mCdead.getWCCenter()[0],this.mCdead.getWCCenter()[1]-53);
+            if(gEngine.Input.isButtonClicked(gEngine.Input.mouseButton.Left))
+            {   
+                this.restart=false;    
+                this.back=true;
+                gEngine.GameLoop.stop();
+            }
+        }
+        else{
+            this.backtbutton.getXform().setPosition(this.mCdead.getWCCenter()[0],this.mCdead.getWCCenter()[1]-50);
         }
     }
     
